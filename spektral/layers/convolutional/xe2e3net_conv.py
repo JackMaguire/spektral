@@ -8,7 +8,7 @@ from spektral.layers.convolutional.conv import Conv
 from spektral.layers.convolutional.message_passing import MessagePassing
 
 
-class XE3NetConv(MessagePassing):
+class XE2E3NetConv(MessagePassing):
     def __init__(
         self,
         stack_channels,
@@ -80,33 +80,57 @@ class XE3NetConv(MessagePassing):
         )
 
         #attention
-        self.pos1_att_sigmoid = Dense(1, activation="sigmoid")
-        self.pos1_att_multiply = Multiply()
-        self.pos2_att_sigmoid = Dense(1, activation="sigmoid")
-        self.pos2_att_multiply = Multiply()
-        self.pos3_att_sigmoid = Dense(1, activation="sigmoid")
-        self.pos3_att_multiply = Multiply()
+        self.e2_pos1_att_sigmoid = Dense(1, activation="sigmoid")
+        self.e2_pos1_att_multiply = Multiply()
+        self.e2_pos2_att_sigmoid = Dense(1, activation="sigmoid")
+        self.e2_pos2_att_multiply = Multiply()
+
+        self.e3_pos1_att_sigmoid = Dense(1, activation="sigmoid")
+        self.e3_pos1_att_multiply = Multiply()
+        self.e3_pos2_att_sigmoid = Dense(1, activation="sigmoid")
+        self.e3_pos2_att_multiply = Multiply()
+        self.e3_pos3_att_sigmoid = Dense(1, activation="sigmoid")
+        self.e3_pos3_att_multiply = Multiply()
 
         self.built = True
 
     def call(self, inputs, **kwargs):
         # TODO we can just use the base class here?
-        x, a3, e3 = self.get_inputs(inputs)
-        x_out, e3_out = self.propagate(x, a3, e3)
+        x, a2, e2, a3, e3 = self.get_inputs(inputs)
+        x_out, e2_out, e3_out = self.propagate(x, a2, e2, a3, e3)
 
-        return x_out, e3_out
+        return x_out, e2_out, e3_out
 
-    def message(self, x, e3):
-        x_i = self.get_i(x)  # Features of self
-        x_j = self.get_j(x)  # Features of neighbours
-        x_k = self.get_k(x)  # Features of neighbours
+    def message(self, x, e2, e3):
+        x_2i = self.get2_i(x)  # Features of self
+        x_2j = self.get2_j(x)  # Features of neighbours
+
+        x_3i = self.get3_i(x)  # Features of self
+        x_3j = self.get3_j(x)  # Features of neighbours
+        x_3k = self.get3_k(x)  # Features of neighbours
 
         # Features of outgoing edges are simply the edge features
+        e2_ij  = e2
         e3_ijk = e3
+
+        # Features of incoming edges j -> i are obtained by transposing the edge features.
+        # Since TF does not allow transposing sparse matrices with rank > 2, we instead
+        # re-order a tf.range(n_edges) and use it as indices to re-order the edge
+        # features.
+        # The following two instructions are the sparse equivalent of
+        #     tf.transpose(E, perm=(1, 0, 2))
+        # where E has shape (N, N, S).
+        reorder_idx = gen_sparse_ops.sparse_reorder(
+            tf.stack([self.index2_i, self.index2_j], axis=-1),
+            tf.range(tf.shape(e2)[0]),
+            (self.n_nodes, self.n_nodes),
+        )[1]
+        e2_ji = tf.gather(e2, reorder_idx)
+
 
         # Concatenate the features and feed to first MLP
         stack_ijk = tf.concat(
-            [x_i, x_j, x_k, e_ijk], axis=-1
+            [x_i, x_j, x_k, e2_ij, e2_ji, e_ijk], axis=-1
         )  # Shape: (n_edges, F + F + S + S)
 
         for stack_conv in range(0, len(self.stack_models)):

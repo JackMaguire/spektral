@@ -67,13 +67,13 @@ class Message3Passing(Layer):
         return embeddings
 
     def get_i(self, x):
-        return tf.gather(x, self.index_i, axis=-2)
+        return tf.gather(x, self.index_i, axis=-2)  #TODO -2?
 
     def get_j(self, x):
-        return tf.gather(x, self.index_j, axis=-2)
+        return tf.gather(x, self.index_j, axis=-2)  #TODO -2?
 
     def get_k(self, x):
-        return tf.gather(x, self.index_k, axis=-2)
+        return tf.gather(x, self.index_k, axis=-2)  #TODO -2?
 
     def get_kwargs(self, x, a3, e3, signature, kwargs):
         output = {}

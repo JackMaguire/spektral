@@ -30,58 +30,69 @@ class Message3Passing(Layer):
         self.agg = deserialize_scatter(aggregate)
 
     def call(self, inputs, **kwargs):
-        x, a3, e3 = self.get_inputs(inputs)
-        return self.propagate(x, a3, e3)
+        x, a2, e2, a3, e3 = self.get_inputs(inputs)
+        return self.propagate(x, a2, e2, a3, e3)
 
     def build(self, input_shape):
         self.built = True
 
-    def propagate(self, x, a3, e3=None, **kwargs):
+    def propagate(self, x, a2, e2, a3, e3, **kwargs):
         self.n_nodes = tf.shape(x)[-2]
-        self.index_i = a3.indices[:, 2] #why reverse order?
-        self.index_j = a3.indices[:, 1]
-        self.index_k = a3.indices[:, 0]
+        self.index2_i = a2.indices[:, 1]
+        self.index2_j = a2.indices[:, 0]
+        self.index3_i = a3.indices[:, 2] #why reverse order?
+        self.index3_j = a3.indices[:, 1]
+        self.index3_k = a3.indices[:, 0]
 
         # Message
-        msg_kwargs = self.get_kwargs(x, a3, e3, self.msg_signature, kwargs)
+        msg_kwargs = self.get_kwargs(x, a2, e2, a3, e3, self.msg_signature, kwargs)
         messages = self.message(x, **msg_kwargs)
 
         # Aggregate
-        agg_kwargs = self.get_kwargs(x, a3, e3, self.agg_signature, kwargs)
+        agg_kwargs = self.get_kwargs(x, a2, e2, a3, e3, self.agg_signature, kwargs)
         embeddings = self.aggregate(messages, **agg_kwargs)
 
         # Update
-        upd_kwargs = self.get_kwargs(x, a3, e3, self.upd_signature, kwargs)
+        upd_kwargs = self.get_kwargs(x, a2, e2, a3, e3, self.upd_signature, kwargs)
         output = self.update(embeddings, **upd_kwargs)
 
         return output
 
     def message(self, x, **kwargs):
-        #raise NotImplementedError()
-        return self.get_j(x)
+        raise NotImplementedError()
 
     def aggregate(self, messages, **kwargs):
-        return self.agg(messages, self.index_i, self.n_nodes)
+        raise NotImplementedError()
 
     def update(self, embeddings, **kwargs):
         return embeddings
 
-    def get_i(self, x):
-        return tf.gather(x, self.index_i, axis=-2)
+    def get2_i(self, x):
+        return tf.gather(x, self.index2_i, axis=-2)
 
-    def get_j(self, x):
-        return tf.gather(x, self.index_j, axis=-2)
+    def get2_j(self, x):
+        return tf.gather(x, self.index2_j, axis=-2)
 
-    def get_k(self, x):
-        return tf.gather(x, self.index_k, axis=-2)
+    def get3_i(self, x):
+        return tf.gather(x, self.index3_i, axis=-2) #TODO -2?
 
-    def get_kwargs(self, x, a3, e3, signature, kwargs):
+    def get3_j(self, x):
+        return tf.gather(x, self.index3_j, axis=-2) #TODO -2?
+
+    def get3_k(self, x):
+        return tf.gather(x, self.index3_k, axis=-2) #TODO -2?
+
+    def get_kwargs(self, x, a2, e2, a3, e3, signature, kwargs):
         output = {}
         for k in signature.keys():
             if signature[k].default is inspect.Parameter.empty or k == "kwargs":
                 pass
             elif k == "x":
                 output[k] = x
+            elif k == "a2":
+                output[k] = a2
+            elif k == "e2":
+                output[k] = e2
             elif k == "a3":
                 output[k] = a3
             elif k == "e3":
@@ -100,18 +111,21 @@ class Message3Passing(Layer):
         adjacency matrix and edge features. In the inputs only contain x and a, then
         e=None is returned.
         """
-        if len(inputs) == 3:
-            x, a3, e3 = inputs
-            assert K.ndim(e3) in (2, 3), "E must have rank 2 or 3" #TODO is this still true?
+        if len(inputs) == 5:
+            x, a2, e2, a3, e3 = inputs
+            assert K.ndim(e2) in (2, 3), "E2 must have rank 2 or 3"
+            assert K.ndim(e3) in (2, 3), "E3 must have rank 2 or 3" #TODO is this still true?
         else:
             raise ValueError(
-                "Expected 3 inputs tensors (X, A3, E3), got {}.".format(len(inputs))
+                "Expected 5 inputs tensors (X, A2, E2, A3, E3), got {}.".format(len(inputs))
             )
         assert K.ndim(x) in (2, 3), "X must have rank 2 or 3"
+        assert K.is_sparse(a2), "A must be a SparseTensor"
+        assert K.ndim(a2) == 2, "A must have rank 2"
         assert K.is_sparse(a3), "A must be a SparseTensor"
         assert K.ndim(a3) == 2, "A must have rank 2" #TODO is this still true?
 
-        return x, a3, e3
+        return x, a2, e2, a3, e3
 
     def get_config(self):
         mp_config = {"aggregate": serialize_scatter(self.agg)}
@@ -126,6 +140,6 @@ class Message3Passing(Layer):
     def config(self):
         return {}
 
-    @staticmethod
-    def preprocess(a3):
-        return a3
+    #@staticmethod
+    #def preprocess(a):
+    #    return a

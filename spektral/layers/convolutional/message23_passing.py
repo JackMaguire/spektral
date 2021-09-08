@@ -38,11 +38,9 @@ class Message3Passing(Layer):
 
     def propagate(self, x, a2, e2, a3, e3, **kwargs):
         self.n_nodes = tf.shape(x)[-2]
-        self.index2_i = a2.indices[:, 1]
-        self.index2_j = a2.indices[:, 0]
-        self.index3_i = a3.indices[:, 2] #why reverse order?
-        self.index3_j = a3.indices[:, 1]
-        self.index3_k = a3.indices[:, 0]
+        self.index_i = a3.indices[:, 0]
+        self.index_j = a3.indices[:, 1]
+        self.index_k = a3.indices[:, 2]
 
         # Message
         msg_kwargs = self.get_kwargs(x, a2, e2, a3, e3, self.msg_signature, kwargs)
@@ -67,20 +65,18 @@ class Message3Passing(Layer):
     def update(self, embeddings, **kwargs):
         return embeddings
 
-    def get2_i(self, x):
-        return tf.gather(x, self.index2_i, axis=-2)
+    def get_i(self, x):
+        return tf.gather(x, self.index_i, axis=-2)
 
-    def get2_j(self, x):
-        return tf.gather(x, self.index2_j, axis=-2)
+    def get_j(self, x):
+        return tf.gather(x, self.index_j, axis=-2)
 
-    def get3_i(self, x):
-        return tf.gather(x, self.index3_i, axis=-2) #TODO -2?
+    def get_k(self, x):
+        return tf.gather(x, self.index_k, axis=-2)
 
-    def get3_j(self, x):
-        return tf.gather(x, self.index3_j, axis=-2) #TODO -2?
-
-    def get3_k(self, x):
-        return tf.gather(x, self.index3_k, axis=-2) #TODO -2?
+    def get_ij(self, e2):
+        #TODO
+        return tf.gather_nd(e2, self.index_i, axis=-2)
 
     def get_kwargs(self, x, a2, e2, a3, e3, signature, kwargs):
         output = {}

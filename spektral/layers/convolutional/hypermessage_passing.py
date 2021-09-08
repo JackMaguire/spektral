@@ -110,8 +110,9 @@ class MessagePassing(Layer):
 
     def propagate(self, x, a, e, a3, e3, **kwargs):
         self.n_nodes = tf.shape(x)[-2]
-        self.index_i = a.indices[:, 1]
-        self.index_j = a.indices[:, 0]
+        # TODO
+        #self.index_i = a.indices[:, 1]
+        #self.index_j = a.indices[:, 0]
 
         self.hyperindex_h1 = a3.indices[:, 2]
         self.hyperindex_h2 = a3.indices[:, 1]
@@ -140,11 +141,12 @@ class MessagePassing(Layer):
     def update(self, embeddings, **kwargs):
         return embeddings
 
-    def get_i(self, x):
-        return tf.gather(x, self.index_i, axis=-2)
+    # TODO
+    #def get_i(self, x):
+    #    return tf.gather(x, self.index_i, axis=-2)
 
-    def get_j(self, x):
-        return tf.gather(x, self.index_j, axis=-2)
+    #def get_j(self, x):
+    #    return tf.gather(x, self.index_j, axis=-2)
 
     def get_hyper1(self, e):
         return tf.gather(e, self.hyperindex_h1, axis=-2)

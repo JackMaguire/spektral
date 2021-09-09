@@ -13,7 +13,7 @@ from spektral.utils.keras import (
 )
 
 
-class MessagePassing(Layer):
+class HyperMessageHyperPassing(Layer):
     r"""
     A general class for message passing networks from the paper
 

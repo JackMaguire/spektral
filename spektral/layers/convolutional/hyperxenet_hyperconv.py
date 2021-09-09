@@ -104,7 +104,7 @@ class HyperXENetHyperConv(HyperMessageHyperPassing):
         e_ijk = e
 
         # Concatenate the features and feed to first MLP
-        stack_ij = tf.concat(
+        stack_ijk = tf.concat(
             [x_i, x_j, x_k, e_ijk], axis=-1
         )  # Shape: (n_edges, F + F + S + S)
 
@@ -132,9 +132,9 @@ class HyperXENetHyperConv(HyperMessageHyperPassing):
         return tf.concat([ x, pos1, pos2, pos3 ], axis=-1), messages
 
     def update(self, embeddings):
-        x_new, stack_ij = embeddings
+        x_new, stack_ijk = embeddings
 
-        return self.node_model(x_new), self.edge_model(stack_ij)
+        return self.node_model(x_new), self.edge_model(stack_ijk)
 
     @property
     def config(self):

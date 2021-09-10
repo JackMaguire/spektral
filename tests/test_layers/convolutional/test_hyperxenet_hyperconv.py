@@ -17,27 +17,15 @@ def test_sparse_model_sizes():
     E_in = Input(shape=(S,), name="E_in")
 
     x = np.ones(shape=(N, F))
-    a = np.ones(shape=(N, N, N))
-
-    #          1  2
-    a_dimi = [ 0, 4, ]
-    a_dimj = [ 1, 2, ]
-    a_dimk = [ 2, 3, ]
-
-    a_val  = [
-        1, # 1
-        1, # 2
-    ]
-
-    a = sp.COO((a_val, (a_dimi, a_dimj, a_dimk)), shape=(N,N,N))
 
     e_vals = [
         [ 1, 2, 3 ], # 1
         [ 3, 2, 1 ], # 2
     ]
 
-    a = sp_matrix_to_sp_tensor(a)
-    e = np.ones(shape=(N * N, S))
+    a = SparseTensor(indices=[ [0, 1, 2], [4, 2, 3] ], values=[1, 1], dense_shape=[5, 5, 5])
+    e = tf.Variable( e_vals, shape=(2,S), dtype='float32' )
+
 
     def assert_n_params(inp, out, expected_size):
         model = Model(inputs=inp, outputs=out)

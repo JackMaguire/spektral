@@ -25,7 +25,7 @@ def test_sparse_model_sizes():
         [ 3, 2, 1 ], # 2
     ]
 
-    a = tf.sparse.SparseTensor(indices=[ [0, 1, 2], [4, 2, 3] ], values=[1, 1], dense_shape=[5, 5, 5])
+    a = tf.sparse.SparseTensor(indices=[ [0, 1, 2], [4, 2, 3] ], values=[1,], dense_shape=[5, 5, 5])
     e = tf.Variable( e_vals, shape=(2,S), dtype='float32' )
 
 

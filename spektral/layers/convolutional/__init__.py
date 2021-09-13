@@ -16,3 +16,4 @@ from .graphsage_conv import GraphSageConv
 from .message_passing import MessagePassing
 from .tag_conv import TAGConv
 from .xenet_conv import XENetConv, XENetDenseConv
+from .xenet_hyp3rconv import XENetHyp3rConv

@@ -5,10 +5,10 @@ from tensorflow.keras.layers import Concatenate, Dense, Multiply, PReLU, ReLU, R
 from tensorflow.python.ops import gen_sparse_ops
 
 from spektral.layers.convolutional.conv import Conv
-from spektral.layers.convolutional.hypermessage_hyperpassing import HyperMessageHyperPassing
+from spektral.layers.convolutional.hyp3rmessage_passing import Hyp3rMessagePassing
 
 
-class HyperXENetHyperConv(HyperMessageHyperPassing):
+class XENetHyp3rConv(Hyp3rMessagePassing):
     def __init__(
         self,
         stack_channels,

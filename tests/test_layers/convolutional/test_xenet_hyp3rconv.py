@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 
-from spektral.layers import XENetConv, XENetDenseConv
+from spektral.layers import XENetHyp3rConv
 from spektral.utils.sparse import sp_matrix_to_sp_tensor
 
 def test_sparse_model_sizes():
@@ -13,8 +13,8 @@ def test_sparse_model_sizes():
     F = 4
     S = 3
     X_in = Input(shape=(F,), name="X_in")
-    A_in = Input(shape=(None,), name="A_in", sparse=True)
-    E_in = Input(shape=(S,), name="E_in")
+    A3_in = Input(shape=(None,), name="A3_in", sparse=True)
+    E3_in = Input(shape=(S,), name="E3_in")
 
     x = np.ones(shape=(N, F))
 
@@ -35,35 +35,28 @@ def test_sparse_model_sizes():
         # for test coverage:
         model([x, a, e])
 
-    X, E = XENetConv([5], 10, 20, False)([X_in, A_in, E_in])
-    assert_n_params([X_in, A_in, E_in], [X, E], 350)
+    X, E = XENetHyp3rConv([5], 10, 20)([X_in, A3_in, E3_in])
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 403)
     # int vs list: 5 vs [5]
-    X, E = XENetConv(5, 10, 20, False)([X_in, A_in, E_in])
-    assert_n_params([X_in, A_in, E_in], [X, E], 350)
-    # t = (4+4+3+3+1)*5 =  75    # Stack Conv
-    # x = (4+5+5+1)*10  = 150    # Node reduce
+    X, E = XENetHyp3rConv(5, 10, 20)([X_in, A3_in, E3_in])
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 403)
+    # t = (4+4+3+1)*5   =  60    # Stack Conv
+    # x = (4+5+5+5+1)*10= 200    # Node reduce
     # e = (5+1)*20      = 120    # Edge reduce
+    # a = (5+1)*1   *3  =  18    # Attention
     # p                 =   5    # Prelu
-    # total = t+x+e+p   = 350
+    # total = t+x+e+p   = 403
 
-    X, E = XENetConv(5, 10, 20, True)([X_in, A_in, E_in])
-    assert_n_params([X_in, A_in, E_in], [X, E], 362)
-    # t = (4+4+3+3+1)*5 =  75
-    # a = (5+1)*1   *2  =  12    # Attention
-    # x = (4+5+5+1)*10  = 150
-    # e = (5+1)*20      = 120
-    # p                 =   5    # Prelu
-    # total = t+x+e+p   = 362
 
-    X, E = XENetConv([50, 5], 10, 20, True)([X_in, A_in, E_in])
-    assert_n_params([X_in, A_in, E_in], [X, E], 1292)
-    # t1 = (4+4+3+3+1)*50   =  750
+    X, E = XENetHyp3rConv([50, 5], 10, 20)([X_in, A3_in, E3_in])
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 1198)
+    # t1 = (4+4+3+1)*50     =  600
     # t2 = (50+1)*5         =  255
-    # a = (5+1)*1   *2      =   12    # Attention
-    # x = (4+5+5+1)*10      =  150
+    # a = (5+1)*1   *3      =   18    # Attention
+    # x = (4+5+5+5+1)*10    =  200
     # e = (5+1)*20          =  120
     # p                     =    5    # Prelu
-    # total = t+x+e+p       = 1292
+    # total = t+x+e+p       = 1198
 
 
 if __name__ == "__main__":

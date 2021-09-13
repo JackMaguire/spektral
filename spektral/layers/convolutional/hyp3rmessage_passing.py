@@ -180,7 +180,7 @@ class Hyp3rMessagePassing(Layer):
             )
         assert K.ndim(x) in (2, 3), "X must have rank 2 or 3"
         assert K.is_sparse(a), "A must be a SparseTensor"
-        assert K.ndim(a) == 3, "A must have rank 3" #TODO right?
+        assert K.ndim(a) == 2, "A must have rank 2" #TODO right?
 
         return x, a, e
 

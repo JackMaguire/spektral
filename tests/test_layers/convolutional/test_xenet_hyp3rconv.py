@@ -14,27 +14,34 @@ def test_sparse_model_sizes():
     N = 5
     F = 4
     S = 3
-    X_in = Input(shape=(F,), name="X_in")
+    X_in = Input(shape=(None,F,), name="X_in")
     A3_in = Input(shape=(None,None,), name="A3_in", sparse=True)
-    E3_in = Input(shape=(S,), name="E3_in")
+    E3_in = Input(shape=(None,S,), name="E3_in")
 
-    x = np.ones(shape=(N, F))
+    x = np.ones(shape=(1, N, F))
+    #x = tf.Variable( x, shape=x.shape, dtype='float32' )
 
-    e_vals = [
+    e_vals = [ [
         [ 1, 2, 3 ], # 1
         [ 3, 2, 1 ], # 2
-    ]
+    ], ]
 
-    a = tf.sparse.SparseTensor(indices=[ [0, 1, 2], [4, 2, 3] ], values=[1, 1], dense_shape=[5, 5, 5])
+    a = tf.sparse.SparseTensor(indices=[ [0, 0, 1, 2], [0, 4, 2, 3] ], values=[1, 1], dense_shape=[1, 5, 5, 5])
     print( "a.indices.shape", a.indices.shape )
     print( "a.shape", a.shape )
     #a = tf.sparse.SparseTensor(indices=[ [0, 4], [1, 2], [2, 3] ], values=[1, 1], dense_shape=[5, 5, 5])
-    e = tf.Variable( e_vals, shape=(2,S), dtype='float32' )
+    #e = tf.Variable( e_vals, shape=(2,S), dtype='float32' )
+    e = np.asarray( e_vals )
+    print( "e:", e )
 
     #Ensure compilability
-    test_model = Model(inputs=[X_in,A3_in,E3_in], outputs=[Dense(1)(X_in),Dense(1)(A3_in),Dense(1)(E3_in)])
+    test_model = Model(inputs=[X_in,E3_in], outputs=[Dense(1)(X_in),Dense(1)(E3_in)])
     test_model.compile(optimizer="adam", loss="mean_squared_error")
-    test_pred = test_model.predict([x, a, e])
+
+    print( type(x), x.shape )
+    print( type(e), e.shape )
+
+    test_pred = test_model.predict( [x, e] )
     print( "test_pred:", test_pred )
 
     def assert_n_params(inp, out, expected_size):

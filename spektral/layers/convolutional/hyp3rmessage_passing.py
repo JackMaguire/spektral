@@ -112,9 +112,9 @@ class Hyp3rMessagePassing(Layer):
     def propagate(self, x, a, e=None, **kwargs):
         self.n_nodes = tf.shape(x)[-2]
         print( "propagate: a.indices.shape", a.indices.shape )
-        self.index_i = a.indices[0]
-        self.index_j = a.indices[1]
-        self.index_k = a.indices[2]
+        self.index_i = a.indices[:,0]
+        self.index_j = a.indices[:,1]
+        self.index_k = a.indices[:,2]
 
         # Message
         msg_kwargs = self.get_kwargs(x, a, e, self.msg_signature, kwargs)
@@ -175,7 +175,7 @@ class Hyp3rMessagePassing(Layer):
         """
         if len(inputs) == 3:
             x, a, e = inputs
-            assert K.ndim(e) == 2, "E must have rank 2" #TODO does this change?
+            assert K.ndim(e) == 3, "E must have rank 3" #TODO does this change?
         else:
             raise ValueError(
                 "Expected 3 inputs tensors (X, A, E), got {}.".format(len(inputs))

@@ -93,6 +93,7 @@ class XENetHyp3rConv(Hyp3rMessagePassing):
 
     def call(self, inputs, **kwargs):
         x, a, e = self.get_inputs(inputs)
+        print( "?????", x, a, e )
         x_out, e_out = self.propagate(x, a, e)
 
         return x_out, e_out

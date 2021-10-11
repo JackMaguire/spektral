@@ -175,7 +175,7 @@ class Hyp3rMessagePassing(Layer):
         """
         if len(inputs) == 3:
             x, a, e = inputs
-            assert K.ndim(e) == 3, "E must have rank 3" #TODO does this change?
+            assert K.ndim(e) in (2,3), "E must have rank 2 or 3 I think" #TODO does this change?
         else:
             raise ValueError(
                 "Expected 3 inputs tensors (X, A, E), got {}.".format(len(inputs))

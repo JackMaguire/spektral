@@ -1,5 +1,5 @@
 import numpy as np
-from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.models import Model
 
 import tensorflow as tf
@@ -15,7 +15,7 @@ def test_sparse_model_sizes():
     F = 4
     S = 3
     X_in = Input(shape=(F,), name="X_in")
-    A3_in = Input(shape=(None,), name="A3_in", sparse=True)
+    A3_in = Input(shape=(None,None,), name="A3_in", sparse=True)
     E3_in = Input(shape=(S,), name="E3_in")
 
     x = np.ones(shape=(N, F))
@@ -31,6 +31,11 @@ def test_sparse_model_sizes():
     #a = tf.sparse.SparseTensor(indices=[ [0, 4], [1, 2], [2, 3] ], values=[1, 1], dense_shape=[5, 5, 5])
     e = tf.Variable( e_vals, shape=(2,S), dtype='float32' )
 
+    #Ensure compilability
+    test_model = Model(inputs=[X_in,A3_in,E3_in], outputs=[Dense(1)(X_in),Dense(1)(A3_in),Dense(1)(E3_in)])
+    test_model.compile(optimizer="adam", loss="mean_squared_error")
+    test_pred = test_model.predict([x, a, e])
+    print( "test_pred:", test_pred )
 
     def assert_n_params(inp, out, expected_size):
         model = Model(inputs=inp, outputs=out)
@@ -38,31 +43,42 @@ def test_sparse_model_sizes():
         print(model.count_params())
         assert model.count_params() == expected_size
         # for test coverage:
-        model([x, a, e])
+        pred = model.predict([x, a, e ])
+        print( pred )
 
+    print( "!!! 1 !!!" )
     X, E = XENetHyp3rConv([5], 10, 20, only_update_i=False)([X_in, A3_in, E3_in])
-    assert_n_params([X_in, A3_in, E3_in], [X, E], 403)
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 423)
     # int vs list: 5 vs [5]
+    print( "!!! 2 !!!" )
     X, E = XENetHyp3rConv(5, 10, 20, only_update_i=False)([X_in, A3_in, E3_in])
-    assert_n_params([X_in, A3_in, E3_in], [X, E], 403)
-    # t = (4+4+3+1)*5   =  60    # Stack Conv
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 423)
+    # t = (4+4+4+3+1)*5 =  80    # Stack Conv
     # x = (4+5+5+5+1)*10= 200    # Node reduce
     # e = (5+1)*20      = 120    # Edge reduce
     # a = (5+1)*1   *3  =  18    # Attention
     # p                 =   5    # Prelu
-    # total = t+x+e+p   = 403
+    # total = t+x+e+p   = 423
 
-
+    print( "!!! 3 !!!" )
     X, E = XENetHyp3rConv([50, 5], 10, 20)([X_in, A3_in, E3_in])
-    assert_n_params([X_in, A3_in, E3_in], [X, E], 1198)
-    # t1 = (4+4+3+1)*50     =  600
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 1398)
+    # t1 = (4+4+4+3+1)*50   =  800
     # t2 = (50+1)*5         =  255
     # a = (5+1)*1   *3      =   18    # Attention
     # x = (4+5+5+5+1)*10    =  200
     # e = (5+1)*20          =  120
     # p                     =    5    # Prelu
-    # total = t+x+e+p       = 1198
+    # total = t+x+e+p       = 1398
 
+    X, E = XENetHyp3rConv(5, 10, 20, only_update_i=True)([X_in, A3_in, E3_in])
+    assert_n_params([X_in, A3_in, E3_in], [X, E], 311)
+    # t = (4+4+4+3+1)*5 =  80    # Stack Conv
+    # x = (4+5+1)*10    = 100    # Node reduce
+    # e = (5+1)*20      = 120    # Edge reduce
+    # a = (5+1)*1   *1  =   6    # Attention
+    # p                 =   5    # Prelu
+    # total = t+x+e+p   = 311
 
 if __name__ == "__main__":
     test_sparse_model_sizes()

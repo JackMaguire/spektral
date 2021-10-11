@@ -117,19 +117,27 @@ class XENetHyp3rConv(Hyp3rMessagePassing):
     def aggregate(self, messages, x):
         # Note: messages == stack_ijk
 
-        pos1_att = self.pos1_att_sigmoid( messages )
-        pos1 = self.pos1_att_multiply( [pos1_att, messages] )
-        pos1 = self.agg( pos1, self.index_i, self.n_nodes )
+        if False:
+            pos1_att = self.pos1_att_sigmoid( messages )
+            pos1 = self.pos1_att_multiply([pos1_att, messages])
+            pos1 = self.agg( pos1, self.index_i, self.n_nodes )
 
-        pos2_att = self.pos2_att_sigmoid( messages )
-        pos2 = self.pos2_att_multiply( [pos2_att, messages] )
-        pos2 = self.agg( pos2, self.index_j, self.n_nodes )
+            pos2_att = self.pos2_att_sigmoid( messages )
+            pos2 = self.pos2_att_multiply([pos2_att, messages])
+            pos2 = self.agg( pos2, self.index_j, self.n_nodes )
 
-        pos3_att = self.pos3_att_sigmoid( messages )
-        pos3 = self.pos3_att_multiply( [pos3_att, messages] )
-        pos3 = self.agg( pos3, self.index_k, self.n_nodes )
+            pos3_att = self.pos3_att_sigmoid( messages )
+            pos3 = self.pos3_att_multiply([pos3_att, messages])
+            pos3 = self.agg( pos3, self.index_k, self.n_nodes )
 
-        return tf.concat([ x, pos1, pos2, pos3 ], axis=-1), messages
+            return tf.concat([ x, pos1, pos2, pos3 ], axis=-1), messages
+
+        else:
+            pos1_att = self.pos1_att_sigmoid( messages )
+            pos1 = self.pos1_att_multiply([pos1_att, messages])
+            pos1 = self.agg( pos1, self.index_i, self.n_nodes )
+
+            return tf.concat([ x, pos1 ], axis=-1), messages
 
     def update(self, embeddings):
         x_new, stack_ijk = embeddings

@@ -40,10 +40,10 @@ def test_sparse_model_sizes():
         # for test coverage:
         model([x, a, e])
 
-    X, E = XENetHyp3rConv([5], 10, 20)([X_in, A3_in, E3_in])
+    X, E = XENetHyp3rConv([5], 10, 20, only_update_i=False)([X_in, A3_in, E3_in])
     assert_n_params([X_in, A3_in, E3_in], [X, E], 403)
     # int vs list: 5 vs [5]
-    X, E = XENetHyp3rConv(5, 10, 20)([X_in, A3_in, E3_in])
+    X, E = XENetHyp3rConv(5, 10, 20, only_update_i=False)([X_in, A3_in, E3_in])
     assert_n_params([X_in, A3_in, E3_in], [X, E], 403)
     # t = (4+4+3+1)*5   =  60    # Stack Conv
     # x = (4+5+5+5+1)*10= 200    # Node reduce

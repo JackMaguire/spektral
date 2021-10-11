@@ -16,6 +16,7 @@ class XENetHyp3rConv(Hyp3rMessagePassing):
         edge_channels,
         node_activation=None,
         edge_activation=None,
+        only_update_i = False,
         aggregate: str = "sum",
         use_bias: bool = True,
         kernel_initializer="glorot_uniform",
@@ -44,6 +45,7 @@ class XENetHyp3rConv(Hyp3rMessagePassing):
         self.edge_channels = edge_channels
         self.node_activation = node_activation
         self.edge_activation = edge_activation
+        self.only_update_i = only_update_i
 
     def build(self, input_shape):
         assert len(input_shape) == 3  # X, A, E, right?
@@ -117,7 +119,7 @@ class XENetHyp3rConv(Hyp3rMessagePassing):
     def aggregate(self, messages, x):
         # Note: messages == stack_ijk
 
-        if False:
+        if not self.only_update_i:
             pos1_att = self.pos1_att_sigmoid( messages )
             pos1 = self.pos1_att_multiply([pos1_att, messages])
             pos1 = self.agg( pos1, self.index_i, self.n_nodes )
@@ -152,4 +154,5 @@ class XENetHyp3rConv(Hyp3rMessagePassing):
             "edge_channels":   self.edge_channels,
             "node_activation": self.node_activation,
             "edge_activation": self.edge_activation,
+            "only_update_i" : self.only_update_i
         }

@@ -122,7 +122,7 @@ class Hyp3rMessagePassing(Layer):
 
         # Aggregate
         agg_kwargs = self.get_kwargs(x, a, e, self.agg_signature, kwargs)
-        embeddings = self.aggregate(messages, **agg_kwargs)
+        embeddings = self.aggregate(messages, x, **agg_kwargs)
 
         # Update
         upd_kwargs = self.get_kwargs(x, a, e, self.upd_signature, kwargs)

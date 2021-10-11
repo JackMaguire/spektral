@@ -110,6 +110,7 @@ class Hyp3rMessagePassing(Layer):
 
     def propagate(self, x, a, e=None, **kwargs):
         self.n_nodes = tf.shape(x)[-2]
+        print( "a.indices.shape", a.indices.shape )
         self.index_i = a.indices[:, 2]
         self.index_j = a.indices[:, 1]
         self.index_k = a.indices[:, 0]
